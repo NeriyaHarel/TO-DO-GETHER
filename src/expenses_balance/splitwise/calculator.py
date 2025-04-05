@@ -209,3 +209,10 @@ class SplitCalc:
         return self._group.members
 
 
+    @property
+    def group_id(self) -> int:
+        return self._group.id
+
+    @property
+    def group_name(self) -> str:
+        return self._group.name

@@ -74,13 +74,18 @@ def settings():
 def index():
     members = db.session.execute(db.select(FamilyMember)).scalars().all()
     tasks = db.session.execute(
-        db.select(Task).options(db.joinedload(Task.assignee)).order_by(
-            Task.created_at.desc())
+        db.select(Task).options().order_by(
+            Task.completed.asc())
     ).scalars().all()
     categories = db.session.execute(db.select(Task.room).distinct()).scalars().all()
-    current_balance = get_expense_calculator(db.session).get_balance()
+
+    # Balance calculation
+    balance_calc = get_expense_calculator(db.session)
+    current_balance = balance_calc.get_balance()
+    current_group = balance_calc.group_name
+
     return render_template('index.html', members=members, tasks=tasks,
-                           categories=categories, balance=current_balance)
+                           categories=categories, balance=current_balance,splitwise_group=current_group)
 
 
 @app.route('/balance', methods=['GET'])
