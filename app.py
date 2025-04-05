@@ -142,6 +142,15 @@ def delete_task(task_id):
     db.session.commit()
     return redirect(url_for('index'))
 
+@app.route('/assign_task/<int:task_id>', methods=['POST'])
+def assign_task(task_id):
+    member_id = request.form.get('member_id')
+    if not member_id:
+        return "Member ID is required", 400
+    task = crud.get_task(db.session, task_id)
+    task.family_member_id = member_id
+    db.session.commit()
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     with app.app_context():

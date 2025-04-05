@@ -1,5 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+<script>
+    function updatePointsValue(value) {
+        document.getElementById('pointsValue').innerText = value;
+    }
+</script>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,12 +15,12 @@
 <body>
 <div class="container mt-4">
     <h1 class="text-center mb-4">TO-DO-GETHER</h1>
-        <!-- Settings Link -->
-        <div class="text-end mb-4">
-            <a href="{{ url_for('settings') }}" class="btn btn-secondary">
-                <i class="fas fa-cog"></i> Settings
-            </a>
-        </div>
+    <!-- Settings Link -->
+    <div class="text-end mb-4">
+        <a href="{{ url_for('settings') }}" class="btn btn-secondary">
+            <i class="fas fa-cog"></i> Settings
+        </a>
+    </div>
     <!-- Add Task Form -->
     <div class="card mb-4">
         <div class="card-header">
@@ -32,11 +37,15 @@
                         <datalist id="categories">
                             {% for category in categories %}
                             <option value="{{ category }}">
-                            {% endfor %}
+                                {% endfor %}
                         </datalist>
                     </div>
                     <div class="col-md-2">
-                        <input type="number" class="form-control mb-2" name="points" placeholder="Points" value="1" min="1">
+                        <label for="points" class="form-label">Task Effort: </label>
+                        <span id="pointsValue">5</span>
+                        <input type="range" class="form-range mb-2" name="points" id="points" min="1" max="10" step="1"
+                               required oninput="updatePointsValue(this.value)">
+
                     </div>
                     <div class="col-md-3">
                         <select class="form-select mb-2" name="member_id">
@@ -52,10 +61,55 @@
         </div>
     </div>
 
+    <div class="row">
+        <!-- Family Members Points -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3>Family Members Points</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for member in members|sort(attribute='points', reverse=true) %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ member.name }}
+                            <span class="badge bg-primary rounded-pill">{{ member.points }} points</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Balance Details -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3>Balance Details</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for debt in balance %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ debt.from_split_user.username }}</strong> owes <strong>{{
+                                debt.to_split_user.username
+                                }}</strong>
+                            </div>
+                            <div>
+                                <span class="badge bg-primary rounded-pill">{{ debt.cost }}</span>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Tasks by Category -->
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
                     <h3>Tasks by Category</h3>
@@ -73,7 +127,8 @@
                                     {{ task.title }}
                                 </span>
                                     {% if task.assignee %}
-                                    <small class="text-muted ms-2">(Assigned to: {{ task.assignee.name }})</small>
+                                    <small class="text-muted ms-2">(Assigned to: <strong>{{ task.assignee.name
+                                        }}</strong>)</small>
                                     {% endif %}
                                 </div>
                                 <div class="d-flex align-items-center">
@@ -81,6 +136,19 @@
                                     {% if task.completed %}
                                     <span class="badge bg-secondary rounded-pill me-2">{{ task.cost }} ₪</span>
                                     {% else %}
+                                    <form action="{{ url_for('assign_task', task_id=task.id) }}" method="POST"
+                                          class="d-inline me-2">
+                                        <div class="d-flex align-items-center">
+                                            <select class="form-select form-select-sm me-2" name="member_id"
+                                                    id="member_id" required>
+                                                <option value="">Assign to...</option>
+                                                {% for member in members %}
+                                                <option value="{{ member.id }}">{{ member.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <button type="submit" class="btn btn-sm btn-primary">Assign</button>
+                                        </div>
+                                    </form>
                                     <form action="{{ url_for('complete_task', task_id=task.id) }}" method="POST"
                                           class="d-inline me-2">
                                         <div class="d-flex align-items-center">
@@ -105,49 +173,7 @@
                 </div>
             </div>
         </div>
-        <!-- Family Members Points -->
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h3>Family Members Points</h3>
-                </div>
-                <div class="card-body">
-                    <ul class="list-group">
-                        {% for member in members|sort(attribute='points', reverse=true) %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            {{ member.name }}
-                            <span class="badge bg-primary rounded-pill">{{ member.points }} points</span>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Balance Details -->
-            <div class="card mt-4">
-                <div class="card-header">
-                    <h3>Balance Details</h3>
-                </div>
-                <div class="card-body">
-                    <ul class="list-group">
-                        {% for debt in balance %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>{{ debt.from_split_user.username }}</strong> owes <strong>{{
-                                debt.to_split_user.username
-                                }}</strong>
-                            </div>
-                            <div>
-                                <span class="badge bg-primary rounded-pill">{{ debt.cost }}</span>
-                            </div>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </div>
+</div>
 </body>
 </html>
