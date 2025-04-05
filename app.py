@@ -34,9 +34,6 @@ def get_expense_calculator(db_session, current_splitwise=None) -> SplitCalc:
 
 def init_settings():
     settings = {
-        'SPLITWISE_CONSUMER_KEY': os.environ['SPLITWISE_CONSUMER_KEY'],
-        'SPLITWISE_CONSUMER_SECRET': os.environ['SPLITWISE_CONSUMER_SECRET'],
-        'SPLITWISE_API_KEY': os.environ['SPLITWISE_API_KEY'],
         'SPLITWISE_GROUP_ID': os.environ['SPLITWISE_GROUP_ID'],
     }
     for key, value in settings.items():
