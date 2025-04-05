@@ -65,4 +65,43 @@ body {
     .col-md-6 {
         margin-bottom: 20px;
     }
-} 
+}
+/* Add custom styles for better mobile experience */
+@media (max-width: 576px) {
+    .form-control, .form-select, .btn {
+        font-size: 0.875rem;
+    }
+    .form-range {
+        width: 100%;
+    }
+    .card-header h3, .card-body h4 {
+        font-size: 1.25rem;
+    }
+    .badge {
+        font-size: 0.75rem;
+    }
+    .list-group-item {
+        font-size: 0.875rem;
+        padding: 1rem 0.75rem;
+    }
+    .list-group-item .d-flex {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .list-group-item .d-flex .badge {
+        margin-top: 5px;
+    }
+    .list-group-item .d-flex .form-select,
+    .list-group-item .d-flex .form-control,
+    .list-group-item .d-flex .btn {
+        margin-top: 5px;
+    }
+    .list-group-item .d-flex .form-select,
+    .list-group-item .d-flex .btn {
+        display: inline-block;
+        width: auto;
+    }
+    .list-group-item .d-flex .form-select {
+        margin-right: 5px;
+    }
+}

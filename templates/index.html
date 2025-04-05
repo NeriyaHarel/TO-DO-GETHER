@@ -30,26 +30,25 @@
         <div class="card-body">
             <form action="{{ url_for('add_task') }}" method="POST">
                 <div class="row">
-                    <div class="col-md-4">
-                        <input type="text" class="form-control mb-2" name="title" placeholder="Task Title" required>
+                    <div class="col-md-4 mb-2">
+                        <input type="text" class="form-control" name="title" placeholder="Task Title" required>
                     </div>
-                    <div class="col-md-3">
-                        <input list="categories" class="form-control mb-2" name="room" placeholder="Category" required>
+                    <div class="col-md-3 mb-2">
+                        <input list="categories" class="form-control" name="room" placeholder="Category" required>
                         <datalist id="categories">
                             {% for category in categories %}
                             <option value="{{ category }}">
                                 {% endfor %}
                         </datalist>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-2 mb-2">
                         <label for="points" class="form-label">Task Effort: </label>
                         <span id="pointsValue">5</span>
-                        <input type="range" class="form-range mb-2" name="points" id="points" min="1" max="10" step="1"
+                        <input type="range" class="form-range" name="points" id="points" min="1" max="10" step="1"
                                required oninput="updatePointsValue(this.value)">
-
                     </div>
-                    <div class="col-md-3">
-                        <select class="form-select mb-2" name="member_id">
+                    <div class="col-md-3 mb-2">
+                        <select class="form-select" name="member_id">
                             <option value="">Assign to...</option>
                             {% for member in members %}
                             <option value="{{ member.id }}">{{ member.name }}</option>
@@ -64,8 +63,8 @@
 
     <div class="row">
         <!-- Family Leader Board -->
-        <div class="col-md-6">
-            <div class="card mb-4">
+        <div class="col-md-6 mb-4">
+            <div class="card">
                 <div class="card-header">
                     <h3>Leader Board</h3>
                 </div>
@@ -83,8 +82,8 @@
         </div>
 
         <!-- Balance Details -->
-        <div class="col-md-6">
-            <div class="card mb-4">
+        <div class="col-md-6 mb-4">
+            <div class="card">
                 <div class="card-header">
                     <h3>Splitwise Group '{{ splitwise_group }}' Balance:</h3>
                 </div>
@@ -122,26 +121,23 @@
                         <h4>{{ room }}</h4>
                         <ul class="list-group">
                             {% for task in tasks if task.room == room %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center">
-                                <span class="{% if task.completed %}text-decoration-line-through{% endif %}">
-                                    {{ task.title }}
-                                </span>
+                            <li class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                                <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center">
+                                    <span class="{% if task.completed %}text-decoration-line-through{% endif %}">
+                                        {{ task.title }}
+                                    </span>
                                     {% if task.assignee %}
-                                    <small class="text-muted ms-2">(Assigned to: <strong>{{ task.assignee.name
-                                        }}</strong>)</small>
+                                    <small class="text-muted ms-md-2">(Assigned to: <strong>{{ task.assignee.name }}</strong>)</small>
                                     {% endif %}
                                 </div>
-                                <div class="d-flex align-items-center">
-                                    <span class="badge bg-primary rounded-pill me-2">{{ task.points }} points</span>
+                                <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center mt-2 mt-md-0">
+                                    <span class="badge bg-primary rounded-pill me-md-2">{{ task.points }} points</span>
                                     {% if task.completed %}
-                                    <span class="badge bg-secondary rounded-pill me-2">{{ task.cost }} ₪</span>
+                                    <span class="badge bg-secondary rounded-pill me-md-2">{{ task.cost }} ₪</span>
                                     {% else %}
-                                    <form action="{{ url_for('assign_task', task_id=task.id) }}" method="POST"
-                                          class="d-inline me-2">
+                                    <form action="{{ url_for('assign_task', task_id=task.id) }}" method="POST" class="d-inline me-md-2">
                                         <div class="d-flex align-items-center">
-                                            <select class="form-select form-select-sm me-2" name="member_id"
-                                                    id="member_id" required>
+                                            <select class="form-select form-select-sm me-2" name="member_id" id="member_id" required>
                                                 <option value="">Assign to...</option>
                                                 {% for member in members %}
                                                 <option value="{{ member.id }}">{{ member.name }}</option>
@@ -150,19 +146,15 @@
                                             <button type="submit" class="btn btn-sm btn-primary">Assign</button>
                                         </div>
                                     </form>
-                                    <form action="{{ url_for('complete_task', task_id=task.id) }}" method="POST"
-                                          class="d-inline me-2">
+                                    <form action="{{ url_for('complete_task', task_id=task.id) }}" method="POST" class="d-inline me-md-2">
                                         <div class="d-flex align-items-center">
                                             <span class="me-1">₪</span>
-                                            <input type="number" class="form-control form-control-sm me-2" name="cost"
-                                                   placeholder="0.00" value="0.00" min="0.00" step="1.00"
-                                                   style="width: 70px;">
+                                            <input type="number" class="form-control form-control-sm me-2" name="cost" placeholder="0.00" value="0.00" min="0.00" step="1.00" style="width: 70px;">
                                             <button type="submit" class="btn btn-sm btn-success">Complete</button>
                                         </div>
                                     </form>
                                     {% endif %}
-                                    <form action="{{ url_for('delete_task', task_id=task.id) }}" method="POST"
-                                          class="d-inline">
+                                    <form action="{{ url_for('delete_task', task_id=task.id) }}" method="POST" class="d-inline">
                                         <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                     </form>
                                 </div>
@@ -176,5 +168,6 @@
         </div>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
