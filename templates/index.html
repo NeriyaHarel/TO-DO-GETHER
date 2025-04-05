@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TO-DO-GETHER</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container mt-4">
+    <h1 class="text-center mb-4">TO-DO-GETHER</h1>
+        <!-- Settings Link -->
+        <div class="text-end mb-4">
+            <a href="{{ url_for('settings') }}" class="btn btn-secondary">
+                <i class="fas fa-cog"></i> Settings
+            </a>
+        </div>
+    <!-- Add Task Form -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>Add New Task</h3>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('add_task') }}" method="POST">
+                <div class="row">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control mb-2" name="title" placeholder="Task Title" required>
+                    </div>
+                    <div class="col-md-3">
+                        <input list="categories" class="form-control mb-2" name="room" placeholder="Category" required>
+                        <datalist id="categories">
+                            {% for category in categories %}
+                            <option value="{{ category }}">
+                            {% endfor %}
+                        </datalist>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="number" class="form-control mb-2" name="points" placeholder="Points" value="1" min="1">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select mb-2" name="member_id">
+                            <option value="">Assign to...</option>
+                            {% for member in members %}
+                            <option value="{{ member.id }}">{{ member.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-success" type="submit">Add Task</button>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Tasks by Category -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Tasks by Category</h3>
+                </div>
+                <div class="card-body">
+                    {% set rooms = tasks|map(attribute='room')|unique|list %}
+                    {% for room in rooms %}
+                    <div class="room-section mb-3">
+                        <h4>{{ room }}</h4>
+                        <ul class="list-group">
+                            {% for task in tasks if task.room == room %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                <span class="{% if task.completed %}text-decoration-line-through{% endif %}">
+                                    {{ task.title }}
+                                </span>
+                                    {% if task.assignee %}
+                                    <small class="text-muted ms-2">(Assigned to: {{ task.assignee.name }})</small>
+                                    {% endif %}
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-primary rounded-pill me-2">{{ task.points }} points</span>
+                                    {% if task.completed %}
+                                    <span class="badge bg-secondary rounded-pill me-2">{{ task.cost }} ₪</span>
+                                    {% else %}
+                                    <form action="{{ url_for('complete_task', task_id=task.id) }}" method="POST"
+                                          class="d-inline me-2">
+                                        <div class="d-flex align-items-center">
+                                            <span class="me-1">₪</span>
+                                            <input type="number" class="form-control form-control-sm me-2" name="cost"
+                                                   placeholder="0.00" value="0.00" min="0.00" step="1.00"
+                                                   style="width: 70px;">
+                                            <button type="submit" class="btn btn-sm btn-success">Complete</button>
+                                        </div>
+                                    </form>
+                                    {% endif %}
+                                    <form action="{{ url_for('delete_task', task_id=task.id) }}" method="POST"
+                                          class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                    </form>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <!-- Family Members Points -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Family Members Points</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for member in members|sort(attribute='points', reverse=true) %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ member.name }}
+                            <span class="badge bg-primary rounded-pill">{{ member.points }} points</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Balance Details -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3>Balance Details</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for debt in balance %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ debt.from_split_user.username }}</strong> owes <strong>{{
+                                debt.to_split_user.username
+                                }}</strong>
+                            </div>
+                            <div>
+                                <span class="badge bg-primary rounded-pill">{{ debt.cost }}</span>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
