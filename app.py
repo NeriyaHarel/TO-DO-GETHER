@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 import os
 from src import crud
@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
+app.secret_key = "Sachin"
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['SQLALCHEMY_DATABASE_URI']
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(model_class=Base,
@@ -31,8 +32,6 @@ def get_expense_calculator(db_session, current_splitwise=None) -> SplitCalc:
         return SplitCalc(config)
 
 
-
-
 def init_settings():
     settings = {
         'SPLITWISE_CONSUMER_KEY': os.environ['SPLITWISE_CONSUMER_KEY'],
@@ -44,17 +43,18 @@ def init_settings():
         crud.set_setting(db.session, key, value)
     db.session.commit()
 
+
 @app.route('/get_users_from_splitwise', methods=['POST'])
 def get_users_from_splitwise():
     expense_calculator = get_expense_calculator(db.session)
-    users = expense_calculator._group.members
-    for user in users:
+    for user in expense_calculator.group_users:
         try:
             crud.add_member(db.session, user.first_name, user.email)
         except ValueError:
             continue  # Skip if the user already exists
     db.session.commit()
     return redirect(url_for('settings'))
+
 
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
@@ -69,16 +69,22 @@ def settings():
 
     settings = db.session.execute(db.select(Setting)).scalars().all()
     family_members = db.session.execute(db.select(FamilyMember)).scalars().all()
-    return render_template('settings.html', settings=settings, family_members=family_members)
+    return render_template('settings.html', settings=settings,
+                           family_members=family_members)
+
+
 @app.route('/')
 def index():
     members = db.session.execute(db.select(FamilyMember)).scalars().all()
     tasks = db.session.execute(
-        db.select(Task).options(db.joinedload(Task.assignee)).order_by(Task.created_at.desc())
+        db.select(Task).options(db.joinedload(Task.assignee)).order_by(
+            Task.created_at.desc())
     ).scalars().all()
     categories = db.session.execute(db.select(Task.room).distinct()).scalars().all()
     current_balance = get_expense_calculator(db.session).get_balance()
-    return render_template('index.html', members=members, tasks=tasks, categories=categories, balance=current_balance)
+    return render_template('index.html', members=members, tasks=tasks,
+                           categories=categories, balance=current_balance)
+
 
 @app.route('/balance', methods=['GET'])
 def balance():
@@ -96,8 +102,16 @@ def add_member():
         db.session.commit()
     except ValueError as e:
         return str(e), 400
-    return redirect(url_for('index'))
+    return redirect(url_for('settings'))
 
+@app.route('/delete_member/<int:member_id>', methods=['POST'])
+def delete_member(member_id):
+    member = crud.get_family_member(db.session, member_id)
+    if not member:
+        return "Member not found", 404
+    db.session.delete(member)
+    db.session.commit()
+    return redirect(url_for('settings'))
 
 @app.route('/add_task', methods=['POST'])
 def add_task():
@@ -125,11 +139,20 @@ def complete_task(task_id):
     expense_calculator = get_expense_calculator(db.session)
     family_member.points += task.points
     if cost > 0:
-        expense_calculator.add_equal_split_expense(
-            cost=CostILS.from_shekel(cost),
-            description=task.title,
-            paying_user=expense_calculator.user_from_email(family_member.email),
-        )
+        cost_ils = CostILS.from_shekel(cost)
+        try:
+            paying_user=expense_calculator.user_from_email(family_member.email)
+        except ValueError:
+            flash(f"User {family_member.email} not found in Splitwise group, "
+                  f"the task '{task.title}' with cost of {cost_ils} will not be added "
+                  f"to Splitwise."
+                  f" Please add the user to Splitwise group first.")
+        else:
+            expense_calculator.add_equal_split_expense(
+                cost=cost_ils,
+                description=task.title,
+                paying_user=paying_user,
+            )
     task.cost = cost
     db.session.commit()
     return redirect(url_for('index'))
@@ -142,6 +165,7 @@ def delete_task(task_id):
     db.session.commit()
     return redirect(url_for('index'))
 
+
 @app.route('/assign_task/<int:task_id>', methods=['POST'])
 def assign_task(task_id):
     member_id = request.form.get('member_id')
@@ -152,10 +176,12 @@ def assign_task(task_id):
     db.session.commit()
     return redirect(url_for('index'))
 
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         init_settings()
         global_splitwise: SplitCalc = get_expense_calculator(db.session)
+        print(global_splitwise.splitwise_config)
 
     app.run(debug=True)

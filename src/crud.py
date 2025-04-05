@@ -8,6 +8,11 @@ def add_member(db_session, name: str, email: str) -> FamilyMember:
     if not name:
         raise ValueError("Name is required")
     member = FamilyMember(name=name, email=email)
+    existing_member = db_session.query(FamilyMember).filter(
+        FamilyMember.email == email
+    ).first()
+    if existing_member:
+        raise ValueError("Family member already exists")
     db_session.add(member)
     return member
 

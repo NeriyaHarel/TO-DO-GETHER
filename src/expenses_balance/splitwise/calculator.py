@@ -204,4 +204,8 @@ class SplitCalc:
 
         return transformed
 
+    @property
+    def group_users(self) -> list[User]:
+        return self._group.members
+
 
