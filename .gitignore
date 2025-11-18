@@ -1,2 +1,8 @@
 /.env
 /instance/
+*.pyc
+.idea/misc.xml
+.idea/vcs.xml
+.idea/watcherTasks.xml
+.idea/misc.xml
+/.idea
