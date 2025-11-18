@@ -40,6 +40,7 @@ body {
     border: 1px solid #eee;
     margin-bottom: 5px;
     border-radius: 5px !important;
+    overflow-y: auto;
 }
 
 .badge {
@@ -68,6 +69,8 @@ body {
 }
 /* Add custom styles for better mobile experience */
 @media (max-width: 576px) {
+    overflow: auto;
+
     .form-control, .form-select, .btn {
         font-size: 0.875rem;
     }
@@ -83,10 +86,13 @@ body {
     .list-group-item {
         font-size: 0.875rem;
         padding: 1rem 0.75rem;
+        overflow: auto;
     }
     .list-group-item .d-flex {
         flex-direction: column;
         align-items: flex-start;
+        overflow: auto;
+
     }
     .list-group-item .d-flex .badge {
         margin-top: 5px;
